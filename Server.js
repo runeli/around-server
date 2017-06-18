@@ -3,10 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var express = require("express");
 var ApiRoute_1 = require("./ApiRoute");
 var AroundMessage_1 = require("./AroundMessage");
-var https = require("https");
+var http = require("https");
 var socketIo = require("socket.io");
-var fs = require("fs");
-var path = require("path");
 var AroundStore_1 = require("./AroundStore");
 var CLIENT_TO_SERVER_MESSAGE = 'clientToServerMessage';
 var SERVER_TO_CLIENT_MESSAGE = 'aroundToClientMessage';
@@ -27,11 +25,7 @@ var AroundServer = (function () {
         this.app.use(router);
     };
     AroundServer.prototype.createServer = function () {
-        var httpsOptions = {
-            key: fs.readFileSync(path.resolve(__dirname, './key.pem')),
-            cert: fs.readFileSync(path.resolve(__dirname, './cert.pem'))
-        };
-        this.server = https.createServer(httpsOptions, this.app);
+        this.server = http.createServer(this.app);
     };
     AroundServer.prototype.listen = function () {
         var _this = this;

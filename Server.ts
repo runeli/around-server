@@ -1,7 +1,7 @@
 import * as express from 'express';
 import {ApiRoute} from './ApiRoute';
 import {AroundMessage} from './AroundMessage';
-import * as https from 'https';
+import * as http from 'https';
 import * as net from 'net';
 import * as socketIo from "socket.io";
 import * as fs from 'fs';
@@ -35,11 +35,7 @@ export class AroundServer {
     }
 
     private createServer(): void {
-        const httpsOptions: https.ServerOptions = {
-            key: fs.readFileSync(path.resolve(__dirname, './key.pem')),
-            cert: fs.readFileSync(path.resolve(__dirname, './cert.pem'))
-        }
-        this.server = https.createServer(httpsOptions, this.app);
+        this.server = http.createServer(this.app);
     }
 
     private listen(): void {
