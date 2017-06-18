@@ -13,7 +13,7 @@ var SERVER_TO_CLIENT_MESSAGE = 'aroundToClientMessage';
 var INITIAL_AROUNDS = 'initialArounds';
 var AroundServer = (function () {
     function AroundServer() {
-        this.port = 8080;
+        this.port = process.env.PORT || 443;
         this.app = express();
         this.initializeRoutes();
         this.createServer();
