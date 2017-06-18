@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "npm test",
-    "start": "tsc && node index.js"
+    "start": "tsc /app/*.ts && ls node index.js"
   },
   "author": "Aleksanteri Negru-Vode",
   "license": "MIT",
