@@ -20,7 +20,7 @@ export class AroundServer {
     public app: express.Express;
 
     constructor() {
-        console.log('Starting Around server...')
+        console.log('This should be built')
         this.app = express();
         this.initializeRoutes();
         this.createServer();
