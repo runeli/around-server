@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var express = require("express");
 var ApiRoute_1 = require("./ApiRoute");
 var AroundMessage_1 = require("./AroundMessage");
-var http = require("https");
+var http = require("http");
 var socketIo = require("socket.io");
 var AroundStore_1 = require("./AroundStore");
 var CLIENT_TO_SERVER_MESSAGE = 'clientToServerMessage';
