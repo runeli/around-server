@@ -16,7 +16,7 @@ export class AroundServer {
     aroundMessageStore: AroundMessageStore;
     io: SocketIO.Server;
     server: net.Server;
-    private readonly port: number = 8080;
+    private readonly port: number = process.env.PORT || 443;
     public app: express.Express;
 
     constructor() {
