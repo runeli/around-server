@@ -10,11 +10,13 @@
   "author": "Aleksanteri Negru-Vode",
   "license": "MIT",
   "dependencies": {
-    "typescript": "2.3.4",
     "@types/express": "^4.0.35",
     "@types/node": "^7.0.29",
     "@types/socket.io": "^1.4.29",
+    "@types/uuid": "^3.0.0",
     "express": "^4.15.3",
-    "socket.io": "^2.0.2"
+    "socket.io": "^2.0.2",
+    "typescript": "2.3.4",
+    "uuid": "^3.1.0"
   }
 }

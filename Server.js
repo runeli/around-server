@@ -1,16 +1,25 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var express = require("express");
-var ApiRoute_1 = require("./ApiRoute");
-var AroundMessage_1 = require("./AroundMessage");
-var http = require("http");
-var socketIo = require("socket.io");
-var AroundStore_1 = require("./AroundStore");
-var CLIENT_TO_SERVER_MESSAGE = 'clientToServerMessage';
-var SERVER_TO_CLIENT_MESSAGE = 'aroundToClientMessage';
-var INITIAL_AROUNDS = 'initialArounds';
-var AroundServer = (function () {
-    function AroundServer() {
+const express = require("express");
+const ApiRoute_1 = require("./ApiRoute");
+const AroundMessage_1 = require("./AroundMessage");
+const http = require("http");
+const socketIo = require("socket.io");
+const AroundStore_1 = require("./AroundStore");
+const CLIENT_TO_SERVER_MESSAGE = 'clientToServerMessage';
+const SERVER_TO_CLIENT_MESSAGE = 'aroundToClientMessage';
+const INITIAL_AROUNDS = 'initialArounds';
+var CommunicationEvents;
+(function (CommunicationEvents) {
+    CommunicationEvents["ADD_AROUND_MESSAGE"] = "addAroundMessage";
+    CommunicationEvents["REMOVE_THREAD"] = "removeThread";
+    CommunicationEvents["REMOVE_AROUND_MESSAGE"] = "removeMessageFromThread";
+    CommunicationEvents["VOTE_THREAD_UP"] = "voteThreadUp";
+    CommunicationEvents["VOTE_THREAD_DOWN"] = "voteThreadUp";
+    CommunicationEvents["GET_NEARBY_THREADS"] = "getNearbyThreads";
+})(CommunicationEvents || (CommunicationEvents = {}));
+class AroundServer {
+    constructor() {
         this.port = process.env.PORT || 443;
         this.app = express();
         this.initializeRoutes();
@@ -19,42 +28,87 @@ var AroundServer = (function () {
         this.listen();
         this.aroundMessageStore = new AroundStore_1.default();
     }
-    AroundServer.prototype.initializeRoutes = function () {
-        var router = express.Router();
+    initializeRoutes() {
+        const router = express.Router();
         ApiRoute_1.ApiRoute.create("/api", router);
         this.app.use(router);
-    };
-    AroundServer.prototype.createServer = function () {
+    }
+    createServer() {
         this.server = http.createServer(this.app);
-    };
-    AroundServer.prototype.listen = function () {
-        var _this = this;
-        this.server.listen(this.port, function () {
-            console.log('Started Around server on port: %s', _this.port);
+    }
+    listen() {
+        this.server.listen(this.port, () => {
+            console.log('Started Around server on port: %s', this.port);
         });
-        this.io.on('connect', function (socket) {
-            _this.printInfo("connected " + socket.id);
-            socket.emit(INITIAL_AROUNDS, _this.aroundMessageStore.get());
-            socket.on(CLIENT_TO_SERVER_MESSAGE, function (_message) {
-                var message = AroundMessage_1.AroundMessage.fromJsonLike(_message, _this.aroundMessageStore.getUniqueMessageId());
-                if (!_this.aroundMessageStore.isMessageValid(message)) {
-                    return;
-                }
-                _this.printInfo('emitted ' + message.id.messageId);
-                _this.aroundMessageStore.add(message);
-                socket.broadcast.emit(SERVER_TO_CLIENT_MESSAGE, message);
-            });
-            socket.on('disconnect', function () {
-                _this.printInfo("disconnected" + socket.id);
+        this.io.on('connect', (socket) => {
+            this.printInfo("connected " + socket.id);
+            this.bindSocketEventHandlers(socket);
+            socket.on('disconnect', () => {
+                this.printInfo("disconnected" + socket.id);
             });
         });
-    };
-    AroundServer.prototype.sockets = function () {
+    }
+    bindSocketEventHandlers(socket) {
+        socket.on(CommunicationEvents.ADD_AROUND_MESSAGE, this.addAroundMessage.bind(this));
+        socket.on(CommunicationEvents.REMOVE_AROUND_MESSAGE, this.removeAroundMessage.bind(this));
+        socket.on(CommunicationEvents.REMOVE_THREAD, this.removeThread.bind(this));
+    }
+    removeAroundMessage(jsonAroundMessage) {
+        try {
+            const aroundMessage = AroundMessage_1.AroundMessage.fromJsonLike(jsonAroundMessage, this.aroundMessageStore.getUniqueMessageId());
+            this.aroundMessageStore.removeMessage(aroundMessage);
+        }
+        catch (e) {
+            console.log(e);
+        }
+    }
+    removeThread(jsonThreadId) {
+        try {
+            this.aroundMessageStore.removeAroundThread(this.parseThreadId(jsonThreadId));
+        }
+        catch (e) {
+            console.log(e);
+        }
+    }
+    addAroundMessage(jsonAroundMessage) {
+        try {
+            const aroundMessage = AroundMessage_1.AroundMessage.fromJsonLike(jsonAroundMessage, this.aroundMessageStore.getUniqueMessageId());
+            if (!aroundMessage.threadId) {
+                this.aroundMessageStore.createThread(this.createAroundThread(aroundMessage));
+            }
+            else {
+                this.aroundMessageStore.addAroundToExistingThread(aroundMessage);
+            }
+        }
+        catch (e) {
+            console.log(e);
+        }
+    }
+    createAroundThread(initialAroundMessage) {
+        let threadId;
+        if (!initialAroundMessage.threadId) {
+            threadId = this.aroundMessageStore.generateUniqueThreadId();
+        }
+        else {
+            threadId = initialAroundMessage.threadId;
+        }
+        const date = new Date();
+        const aroundMessages = [initialAroundMessage];
+        return {
+            threadId,
+            date,
+            aroundMessages,
+            location: initialAroundMessage.location
+        };
+    }
+    sockets() {
         this.io = socketIo(this.server);
-    };
-    AroundServer.prototype.printInfo = function (msg) {
-        console.log("Clients: [" + Object.keys(this.io.sockets.connected).length + "], " + msg);
-    };
-    return AroundServer;
-}());
+    }
+    printInfo(msg) {
+        console.log(`Clients: [${Object.keys(this.io.sockets.connected).length}], ${msg}`);
+    }
+    parseThreadId(obj) {
+        return obj.threadId;
+    }
+}
 exports.AroundServer = AroundServer;

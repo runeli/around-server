@@ -1,6 +1,6 @@
 import * as express from 'express';
 import {ApiRoute} from './ApiRoute';
-import {AroundMessage} from './AroundMessage';
+import {AroundMessage, AroundThread} from './AroundMessage';
 import * as http from 'http';
 import * as net from 'net';
 import * as socketIo from "socket.io";
@@ -12,6 +12,15 @@ const CLIENT_TO_SERVER_MESSAGE = 'clientToServerMessage';
 const SERVER_TO_CLIENT_MESSAGE = 'aroundToClientMessage';
 const INITIAL_AROUNDS = 'initialArounds';
 
+enum CommunicationEvents {
+    ADD_AROUND_MESSAGE = "addAroundMessage",
+    REMOVE_THREAD = "removeThread",
+    REMOVE_AROUND_MESSAGE = "removeMessageFromThread",
+    VOTE_THREAD_UP = "voteThreadUp",
+    VOTE_THREAD_DOWN = "voteThreadUp",
+    GET_NEARBY_THREADS = "getNearbyThreads"
+}
+
 export class AroundServer {
     aroundMessageStore: AroundMessageStore;
     io: SocketIO.Server;
@@ -20,7 +29,6 @@ export class AroundServer {
     public app: express.Express;
 
     constructor() {
-        console.log('This should be built')
         this.app = express();
         this.initializeRoutes();
         this.createServer();
@@ -46,20 +54,65 @@ export class AroundServer {
 
         this.io.on('connect', (socket: SocketIO.Socket) => {
             this.printInfo("connected " + socket.id);
-            socket.emit(INITIAL_AROUNDS, this.aroundMessageStore.get());
-            socket.on(CLIENT_TO_SERVER_MESSAGE, (_message: AroundMessage) => {
-                let message = AroundMessage.fromJsonLike(_message, this.aroundMessageStore.getUniqueMessageId());                
-                if(!this.aroundMessageStore.isMessageValid(message)) {                    
-                    return;
-                }
-                this.printInfo('emitted ' + message.id.messageId);
-                this.aroundMessageStore.add(message);
-                socket.broadcast.emit(SERVER_TO_CLIENT_MESSAGE, message);
-            });
+            this.bindSocketEventHandlers(socket);
             socket.on('disconnect', () => {
                 this.printInfo("disconnected" + socket.id);
             });
         });
+    }
+
+    private bindSocketEventHandlers(socket: SocketIO.Socket): void {
+        socket.on(CommunicationEvents.ADD_AROUND_MESSAGE, this.addAroundMessage.bind(this));
+        socket.on(CommunicationEvents.REMOVE_AROUND_MESSAGE, this.removeAroundMessage.bind(this));
+        socket.on(CommunicationEvents.REMOVE_THREAD, this.removeThread.bind(this));
+    }
+
+    private removeAroundMessage(jsonAroundMessage: any) {
+        try {
+            const aroundMessage = AroundMessage.fromJsonLike(jsonAroundMessage, this.aroundMessageStore.getUniqueMessageId());
+            this.aroundMessageStore.removeMessage(aroundMessage);
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    private removeThread(jsonThreadId: string) {
+        try {
+            this.aroundMessageStore.removeAroundThread(this.parseThreadId(jsonThreadId));
+        } catch (e) {
+            console.log(e);
+        }
+    }
+
+    private addAroundMessage(jsonAroundMessage: AroundMessage): void {
+        try {
+            const aroundMessage = AroundMessage.fromJsonLike(jsonAroundMessage, this.aroundMessageStore.getUniqueMessageId());
+            if(!aroundMessage.threadId) {
+                this.aroundMessageStore.createThread(this.createAroundThread(aroundMessage));
+            } else {
+                this.aroundMessageStore.addAroundToExistingThread(aroundMessage);
+            }
+        } catch (e) {
+            console.log(e);
+        }
+
+    }
+
+    private createAroundThread(initialAroundMessage: AroundMessage): AroundThread {
+        let threadId;
+        if(!initialAroundMessage.threadId) {
+            threadId = this.aroundMessageStore.generateUniqueThreadId();
+        } else {
+            threadId = initialAroundMessage.threadId;
+        }
+        const date = new Date();
+        const aroundMessages: AroundMessage[] = [initialAroundMessage];
+        return {
+            threadId,
+            date,
+            aroundMessages,
+            location: initialAroundMessage.location
+        }
     }
 
     private sockets(): void {
@@ -68,5 +121,9 @@ export class AroundServer {
 
     private printInfo(msg: string): void {
         console.log(`Clients: [${Object.keys(this.io.sockets.connected).length}], ${msg}`);
+    }
+
+    private parseThreadId(obj:any) {
+        return obj.threadId;
     }
 }

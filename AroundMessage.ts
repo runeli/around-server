@@ -3,32 +3,35 @@ export interface AroundMessageLocation {
     lng: number;
 }
 
-export interface IAroundMessage {
-    messageBody: string;
-    location: AroundMessageLocation;
-    id: MessageId;
-    date: Date;
-}
-
 export interface MessageId {
     messageId: string;
 }
 
-export class AroundMessage implements IAroundMessage {
+export interface AroundThread {
+    threadId: string;
+    date: Date;
+    location: AroundMessageLocation;
+    aroundMessages: AroundMessage[];
+}
+
+export class AroundMessage {
     messageBody: string;
     location: AroundMessageLocation;
-    id: MessageId;
+    messageId: MessageId;
     date: Date;
-    public static fromJsonLike(obj: IAroundMessage, messageId: MessageId): AroundMessage {
+    threadId: string;
+
+    public static fromJsonLike(obj: AroundMessage, messageId: MessageId): AroundMessage {
         let aroundMessage = new AroundMessage();
         aroundMessage.date = new Date(obj.date);
         aroundMessage.location = obj.location;
         aroundMessage.messageBody = obj.messageBody ? obj.messageBody : "";
-        aroundMessage.id = messageId
+        aroundMessage.messageId = messageId;
+        aroundMessage.threadId = obj.threadId;
         return aroundMessage;
     }
     
     public toString(): string {
-        return this.id.messageId;
+        return this.messageId.messageId;
     }
 }

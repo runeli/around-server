@@ -1,31 +1,9 @@
-import {AroundMessage, AroundMessageLocation, MessageId} from './AroundMessage';
-
-
+import {AroundMessage, AroundMessageLocation, MessageId, AroundThread} from './AroundMessage';
+import * as uuid from 'uuid';
 
 export default class AroundStore {
-    
-    private messages: AroundMessage[] = [];
-
-    add(message: AroundMessage) {
-        if(this.isMessageValid(message)) {
-            this.messages.push(message);
-        } else {
-            console.warn(`Unable to add message ${message.id.messageId}. Validation errors exist`);
-        }
-    }
-
-    cleanAll(): void {
-        this.messages = [];
-    }
-
-    get(count?: number): AroundMessage[] {
-        if(count) {
-            return this.messages.splice(count);
-        } else {
-            return this.messages;
-        }
-    }
-
+    private aroundThreads: AroundThread[] = [];
+    private messageCount = 0;
     isMessageValid(message: AroundMessage): boolean {
         if(this.isMessageBodyValid(message) && this.isAroundMessageLocationValid(message)){
             return true;
@@ -34,8 +12,56 @@ export default class AroundStore {
         }
     }
 
-    public getUniqueMessageId(): MessageId {
-        return {messageId: this.messages.length.toString()}
+    getUniqueMessageId(): MessageId {
+        return {messageId: this.messageCount.toString()};
+    }
+
+    generateUniqueThreadId(): string {
+        return uuid.v4();
+    }
+
+    threadIdExists(threadId: string): boolean {
+        return this.aroundThreads.some(thread => thread.threadId == threadId);
+    }
+
+    createThread(aroundThread: AroundThread) {
+        this.aroundThreads.push(aroundThread);
+        this.messageCount = this.messageCount + aroundThread.aroundMessages.length;
+        console.log(`Created thread with threadId: ${aroundThread.threadId}`);
+    }
+
+    addAroundToExistingThread(aroundMessage: AroundMessage): void {
+        const aroundThread = this.getAroundThreadById(aroundMessage.threadId);
+        aroundThread.aroundMessages.push(aroundMessage);
+        this.messageCount++;
+        console.log(`Added around to thread threadId: ${aroundMessage.threadId}, aroundMessageId ${aroundMessage.messageId}`);
+    }
+
+    removeMessage(aroundMessage: AroundMessage) {        
+        const aroundThread = this.getAroundThreadById(aroundMessage.threadId);
+        const indexToDelete = aroundThread.aroundMessages.findIndex(message => message.messageId == aroundMessage.messageId);
+        aroundThread.aroundMessages.splice(indexToDelete, 1);
+        this.messageCount--;
+        console.log(`Removed message from threadId: ${aroundThread.threadId}, aroundMessageId ${aroundMessage.messageId}`);
+    }
+
+    removeAroundThread(threadId: string) {
+        const maybeAroundThreadIndex = this.aroundThreads.findIndex(thread => thread.threadId == threadId);
+        if(maybeAroundThreadIndex) {
+            this.messageCount = this.messageCount - this.getAroundThreadById(threadId).aroundMessages.length;
+            this.aroundThreads.splice(maybeAroundThreadIndex, 1);
+            console.log(`Remove around thread threadId ${threadId}`);
+        }
+        
+    }
+
+    private getAroundThreadById(threadId: string): AroundThread {
+        const maybeAroundThread = this.aroundThreads.find(thread => thread.threadId == threadId);
+        if(maybeAroundThread) {
+            return maybeAroundThread;
+        } else {
+            throw new Error(`Tried to operate on non-existing thread. ThreadId ${threadId}`);
+        }
     }
 
     private isAroundMessageLocationValid(message: AroundMessage) : boolean {
