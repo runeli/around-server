@@ -6,13 +6,14 @@ import * as net from 'net';
 import * as socketIo from "socket.io";
 import * as fs from 'fs';
 import * as path from 'path';
-import AroundMessageStore from './AroundStore';
+import {AroundStoreSinleton, AroundStore} from './AroundStore';
 
 const CLIENT_TO_SERVER_MESSAGE = 'clientToServerMessage';
 const SERVER_TO_CLIENT_MESSAGE = 'aroundToClientMessage';
 const INITIAL_AROUNDS = 'initialArounds';
 
 enum CommunicationEvents {
+    INITIAL_AROUNDS = "initialArounds",
     ADD_AROUND_MESSAGE = "addAroundMessage",
     REMOVE_THREAD = "removeThread",
     REMOVE_AROUND_MESSAGE = "removeMessageFromThread",
@@ -22,7 +23,7 @@ enum CommunicationEvents {
 }
 
 export class AroundServer {
-    aroundMessageStore: AroundMessageStore;
+    aroundMessageStore: AroundStore;
     io: SocketIO.Server;
     server: net.Server;
     private readonly port: number = process.env.PORT || 443;
@@ -34,7 +35,7 @@ export class AroundServer {
         this.createServer();
         this.sockets();
         this.listen();
-        this.aroundMessageStore = new AroundMessageStore();
+        this.aroundMessageStore = AroundStoreSinleton;
     }
 
     private initializeRoutes(): void {
@@ -62,9 +63,14 @@ export class AroundServer {
     }
 
     private bindSocketEventHandlers(socket: SocketIO.Socket): void {
+        this.emitInitialArounds(socket);
         socket.on(CommunicationEvents.ADD_AROUND_MESSAGE, this.addAroundMessage.bind(this, socket));
         socket.on(CommunicationEvents.REMOVE_AROUND_MESSAGE, this.removeAroundMessage.bind(this, socket));
         socket.on(CommunicationEvents.REMOVE_THREAD, this.removeThread.bind(this, socket));
+    }
+
+    private emitInitialArounds(socket: SocketIO.Socket) {
+        socket.emit(CommunicationEvents.INITIAL_AROUNDS, this.aroundMessageStore.getAroundThreads());
     }
 
     private removeAroundMessage(socket: SocketIO.Socket, jsonAroundMessage: any) {

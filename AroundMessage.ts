@@ -3,10 +3,6 @@ export interface AroundMessageLocation {
     lng: number;
 }
 
-export interface MessageId {
-    messageId: string;
-}
-
 export interface AroundThread {
     threadId: string;
     date: Date;
@@ -17,11 +13,11 @@ export interface AroundThread {
 export class AroundMessage {
     messageBody: string;
     location: AroundMessageLocation;
-    messageId: MessageId;
+    messageId: string;
     date: Date;
     threadId: string;
 
-    public static fromJsonLike(obj: AroundMessage, messageId: MessageId): AroundMessage {
+    public static fromJsonLike(obj: AroundMessage, messageId: string): AroundMessage {
         let aroundMessage = new AroundMessage();
         aroundMessage.date = new Date(obj.date);
         aroundMessage.location = obj.location;
@@ -32,6 +28,6 @@ export class AroundMessage {
     }
     
     public toString(): string {
-        return this.messageId.messageId;
+        return this.messageId;
     }
 }

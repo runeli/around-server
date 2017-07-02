@@ -1,19 +1,22 @@
-import {AroundMessage, AroundMessageLocation, MessageId, AroundThread} from './AroundMessage';
+import {AroundMessage, AroundMessageLocation, AroundThread} from './AroundMessage';
 import * as uuid from 'uuid';
 
-export default class AroundStore {
+export class AroundStore {
     private aroundThreads: AroundThread[] = [];
     private messageCount = 0;
-    isMessageValid(message: AroundMessage): boolean {
-        if(this.isMessageBodyValid(message) && this.isAroundMessageLocationValid(message)){
-            return true;
-        } else {
-            return false;
-        }
+
+    clearDatabase() {
+        this.aroundThreads = [];
+        this.messageCount = 0;
+        console.log(`Cleared database.`);
     }
 
-    getUniqueMessageId(): MessageId {
-        return {messageId: this.messageCount.toString()};
+    isMessageValid(message: AroundMessage): boolean {
+        return this.isMessageBodyValid(message) && this.isAroundMessageLocationValid(message);
+    }
+
+    getUniqueMessageId(): string {        
+        return uuid.v4();
     }
 
     generateUniqueThreadId(): string {
@@ -55,6 +58,10 @@ export default class AroundStore {
         
     }
 
+    getAroundThreads() {
+        return this.aroundThreads;
+    }
+
     private getAroundThreadById(threadId: string): AroundThread {
         const maybeAroundThread = this.aroundThreads.find(thread => thread.threadId == threadId);
         if(maybeAroundThread) {
@@ -89,7 +96,5 @@ export default class AroundStore {
         }
         return true;
     }
-
-
-
 }
+export const AroundStoreSinleton = new AroundStore();
