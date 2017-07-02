@@ -62,12 +62,12 @@ export class AroundServer {
     }
 
     private bindSocketEventHandlers(socket: SocketIO.Socket): void {
-        socket.on(CommunicationEvents.ADD_AROUND_MESSAGE, this.addAroundMessage.bind(this));
-        socket.on(CommunicationEvents.REMOVE_AROUND_MESSAGE, this.removeAroundMessage.bind(this));
-        socket.on(CommunicationEvents.REMOVE_THREAD, this.removeThread.bind(this));
+        socket.on(CommunicationEvents.ADD_AROUND_MESSAGE, this.addAroundMessage.bind(this, socket));
+        socket.on(CommunicationEvents.REMOVE_AROUND_MESSAGE, this.removeAroundMessage.bind(this, socket));
+        socket.on(CommunicationEvents.REMOVE_THREAD, this.removeThread.bind(this, socket));
     }
 
-    private removeAroundMessage(jsonAroundMessage: any) {
+    private removeAroundMessage(socket: SocketIO.Socket, jsonAroundMessage: any) {
         try {
             const aroundMessage = AroundMessage.fromJsonLike(jsonAroundMessage, this.aroundMessageStore.getUniqueMessageId());
             this.aroundMessageStore.removeMessage(aroundMessage);
@@ -76,7 +76,7 @@ export class AroundServer {
         }
     }
 
-    private removeThread(jsonThreadId: string) {
+    private removeThread(socket: SocketIO.Socket, jsonThreadId: string) {
         try {
             this.aroundMessageStore.removeAroundThread(this.parseThreadId(jsonThreadId));
         } catch (e) {
@@ -84,7 +84,7 @@ export class AroundServer {
         }
     }
 
-    private addAroundMessage(jsonAroundMessage: AroundMessage): void {
+    private addAroundMessage(socket: SocketIO.Socket, jsonAroundMessage: AroundMessage): void {        
         try {
             const aroundMessage = AroundMessage.fromJsonLike(jsonAroundMessage, this.aroundMessageStore.getUniqueMessageId());
             if(!aroundMessage.threadId) {
@@ -92,6 +92,7 @@ export class AroundServer {
             } else {
                 this.aroundMessageStore.addAroundToExistingThread(aroundMessage);
             }
+            socket.broadcast.emit(CommunicationEvents.ADD_AROUND_MESSAGE, aroundMessage);
         } catch (e) {
             console.log(e);
         }
