@@ -35,7 +35,7 @@ const generateRandomLocation = (latLongLocation: AroundMessageLocation, radius: 
 
 const generateAround = (latLongLocation: AroundMessageLocation, threadId: string): AroundMessage => {
     return {
-        messageBody: pickRandomWord() + " " + pickRandomWord() + " " + pickRandomWord(), 
+        messageBody: (new Array(30)).fill(1).map(pickRandomWord).join(" "),
         date: new Date(), 
         messageId: randomId(),
         threadId: threadId,

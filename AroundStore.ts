@@ -62,7 +62,7 @@ export class AroundStore {
         return this.aroundThreads;
     }
 
-    private getAroundThreadById(threadId: string): AroundThread {
+    public getAroundThreadById(threadId: string): AroundThread {
         const maybeAroundThread = this.aroundThreads.find(thread => thread.threadId == threadId);
         if(maybeAroundThread) {
             return maybeAroundThread;

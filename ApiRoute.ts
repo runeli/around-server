@@ -19,17 +19,27 @@ export class ApiRoute  {
         this.router.post(this.route + "/initializeFixtures", (req: Request, res: Response) => {
             aroundStore.clearDatabase();
             const helsinkiLocation = {lng: 24.9410248, lat:60.1733244};
-            const threadId1 = aroundStore.generateUniqueThreadId();
-            const messages = (new Array(5)).fill(0).map(() => generateAroundMessage(helsinkiLocation, threadId1));
-            const thread1 = {
-                    threadId: threadId1,
-                    location: helsinkiLocation,
-                    aroundMessages: messages,
-                    date: new Date()
-            };
-            aroundStore.createThread(thread1);
-            res.json(thread1);
+            (new Array(50)).fill(0).map(() => this.generateThread()).forEach(t => aroundStore.createThread(t));
+            res.json({"msg":"generated threads"});
         });
+
+        this.router.get(this.route + "/thread/:threadId", (req: Request, res: Response) => {
+            console.log("get thread by id " + req.params.threadId);
+            const thread = aroundStore.getAroundThreadById(req.params.threadId);
+            res.json({thread});
+        });
+    }
+
+    private generateThread(): AroundThread {
+        const helsinkiLocation = {lng: 24.9410248, lat:60.1733244};
+        const threadId1 = aroundStore.generateUniqueThreadId();
+        const messages = (new Array(30)).fill(0).map(() => generateAroundMessage(helsinkiLocation, threadId1));
+        return {
+                threadId: threadId1,
+                location: helsinkiLocation,
+                aroundMessages: messages,
+                date: new Date()
+        };
     }
 
     
