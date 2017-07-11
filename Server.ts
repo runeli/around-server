@@ -57,7 +57,7 @@ export class AroundServer {
             this.printInfo("connected " + socket.id);
             this.bindSocketEventHandlers(socket);
             socket.on('disconnect', () => {
-                this.printInfo("disconnected" + socket.id);
+                this.printInfo("disconnected " + socket.id);
             });
         });
     }
