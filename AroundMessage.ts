@@ -17,7 +17,7 @@ export class AroundMessage {
     date: Date;
     threadId: string;
 
-    public static fromJsonLike(obj: AroundMessage, messageId: string): AroundMessage {
+    public static fromJson(obj: AroundMessage, messageId: string): AroundMessage {
         let aroundMessage = new AroundMessage();
         aroundMessage.date = new Date(obj.date);
         aroundMessage.location = obj.location;
