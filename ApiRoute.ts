@@ -13,7 +13,7 @@ router.get('/thread/:threadId', (req: Request, res: Response) => {
 });
 
 router.post('/thread', (req: Request, res: Response) => {
-    const message: AroundMessage = AroundMessage.fromJson(req.body, req.body.messageId);
+    const message: AroundMessage = AroundMessage.fromJson(req.body);
     const thread = aroundService.createNewThreadOrInsertToExisting(message);
     res.json(thread);
 });
@@ -35,10 +35,10 @@ const initializeFixtures = (): void => {
 
 const generateThread = (): AroundThread => {
     const helsinkiLocation = {lng: 24.9410248, lat:60.1733244};
-    const threadId1 = aroundStore.generateUniqueThreadId();
-    const messages = (new Array(30)).fill(0).map(() => generateAroundMessage(helsinkiLocation, threadId1));
+    const threadId = aroundStore.generateUniqueThreadId();
+    const messages = (new Array(30)).fill(0).map(() => generateAroundMessage(helsinkiLocation, threadId));
     return {
-        threadId: threadId1,
+        threadId,
         location: helsinkiLocation,
         aroundMessages: messages,
         date: new Date()

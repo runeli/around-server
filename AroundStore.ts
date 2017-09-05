@@ -34,10 +34,12 @@ export class AroundStore {
     }
 
     addAroundToExistingThread(aroundMessage: AroundMessage): void {
-        const aroundThread = this.getAroundThreadById(aroundMessage.threadId);
-        aroundThread.aroundMessages.push(aroundMessage);
-        this.messageCount++;
-        console.log(`Added around to thread threadId: ${aroundMessage.threadId}, aroundMessageId ${aroundMessage.messageId}`);
+        if(aroundMessage.threadId) {
+            const aroundThread = this.getAroundThreadById(aroundMessage.threadId);
+            aroundThread.aroundMessages.push(aroundMessage);
+            this.messageCount++;
+            console.log(`Added around to thread threadId: ${aroundMessage.threadId}, aroundMessageId ${aroundMessage.messageId}`);
+        }
     }
 
     removeMessage(aroundMessage: AroundMessage) {        
@@ -62,7 +64,7 @@ export class AroundStore {
         return this.aroundThreads;
     }
 
-    public getAroundThreadById(threadId: string): AroundThread {
+    public getAroundThreadById(threadId: string | null): AroundThread {
         const maybeAroundThread = this.aroundThreads.find(thread => thread.threadId == threadId);
         if(maybeAroundThread) {
             return maybeAroundThread;

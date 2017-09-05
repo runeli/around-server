@@ -15,14 +15,13 @@ export class AroundMessage {
     location: AroundMessageLocation;
     messageId: string;
     date: Date;
-    threadId: string;
+    threadId: string | null;
 
-    public static fromJson(obj: AroundMessage, messageId: string): AroundMessage {
+    public static fromJson(obj: AroundMessage): AroundMessage {
         let aroundMessage = new AroundMessage();
         aroundMessage.date = new Date(obj.date);
         aroundMessage.location = obj.location;
         aroundMessage.messageBody = obj.messageBody ? obj.messageBody : "";
-        aroundMessage.messageId = messageId;
         aroundMessage.threadId = obj.threadId;
         return aroundMessage;
     }
