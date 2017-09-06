@@ -2,7 +2,7 @@ import { NextFunction, Request, Response, Router } from "express";
 import {AroundStoreSinleton as aroundStore} from './AroundStore';
 import {AroundThread, AroundMessage} from './AroundMessage';
 import generateAroundMessage from './RandomAroundGenerator';
-import aroundService from './AroundService';
+import aroundService, {IpAddressQueryResponse} from './AroundService';
 
 const router = Router();
 
@@ -21,9 +21,15 @@ router.post('/thread', (req: Request, res: Response) => {
 router.get('/threads', (req: Request, res: Response) => {
     res.json(aroundStore.getAroundThreads());
 });
+
 router.post("/initializeFixtures", (req: Request, res: Response) => {
     initializeFixtures();
     res.json({"msg":"generated threads"});
+});
+
+router.get('/ip', (req: Request, res: Response) => {
+    const requesterIpv4Address = req.connection.remoteAddress.replace(/^.*:/, '');
+    aroundService.getLocationData(requesterIpv4Address).then(ipApiResponse => {res.json(ipApiResponse)});
 });
 
 const initializeFixtures = (): void => {
