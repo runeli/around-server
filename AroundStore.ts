@@ -53,8 +53,7 @@ export class AroundStore {
     removeAroundThread(threadId: string) {
         const maybeAroundThreadIndex = this.aroundThreads.findIndex(thread => thread.threadId == threadId);
         if(maybeAroundThreadIndex) {
-            this.messageCount = this.messageCount - this.getAroundThreadById(threadId).aroundMessages.length;
-            this.aroundThreads.splice(maybeAroundThreadIndex, 1);
+            this.messageCount = this.messageCount - this.getAroundThreadById(threadId).aroundMessages.length;                                
             console.log(`Remove around thread threadId ${threadId}`);
         }
         

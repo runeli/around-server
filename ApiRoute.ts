@@ -14,8 +14,16 @@ router.get('/thread/:threadId', (req: Request, res: Response) => {
 
 router.post('/thread', (req: Request, res: Response) => {
     const message: AroundMessage = AroundMessage.fromJson(req.body);
-    const thread = aroundService.createNewThreadOrInsertToExisting(message);
-    res.json(thread);
+    const requesterIpv4Address = req.connection.remoteAddress.replace(/^.*:/, '');
+    aroundService.getLocationData(requesterIpv4Address).then(ipApiResponse => {
+        const location = {
+            lat: ipApiResponse.lat,
+            lng: ipApiResponse.lon
+        };
+        message.location = location;
+        const thread = aroundService.createNewThreadOrInsertToExisting(message);
+        res.json(thread);
+    });
 });
 
 router.get('/threads', (req: Request, res: Response) => {
