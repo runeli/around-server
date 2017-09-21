@@ -39,7 +39,8 @@ const generateAround = (latLongLocation: AroundMessageLocation, threadId: string
         date: new Date(), 
         messageId: randomId(),
         threadId: threadId,
-        location: generateRandomLocation(latLongLocation, 0.01)
+        location: generateRandomLocation(latLongLocation, 0.01),
+        temporaryMessageId: null
     };
 }
 

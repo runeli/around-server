@@ -16,6 +16,7 @@ export class AroundMessage {
     messageId: string;
     date: Date;
     threadId: string | null;
+    temporaryMessageId: string | null;
 
     public static fromJson(obj: AroundMessage): AroundMessage {
         let aroundMessage = new AroundMessage();
@@ -23,6 +24,7 @@ export class AroundMessage {
         aroundMessage.location = obj.location;
         aroundMessage.messageBody = obj.messageBody ? obj.messageBody : "";
         aroundMessage.threadId = obj.threadId;
+        aroundMessage.temporaryMessageId = obj.temporaryMessageId;
         return aroundMessage;
     }
     
