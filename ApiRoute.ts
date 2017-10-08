@@ -14,8 +14,8 @@ router.get('/thread/:threadId', (req: Request, res: Response) => {
 
 router.post('/thread', (req: Request, res: Response) => {
     const message: AroundMessage = AroundMessage.fromJson(req.body);
-    const requesterIpv4Address = req.connection.remoteAddress.replace(/^.*:/, '');
-    aroundService.getLocationData(requesterIpv4Address).then(ipApiResponse => {
+    const ip = readRequestIpFromEitherHeadersOrconnection(req);
+    aroundService.getLocationData(ip).then(ipApiResponse => {
         const location = {
             lat: ipApiResponse.lat,
             lng: ipApiResponse.lon
@@ -36,8 +36,8 @@ router.post("/initializeFixtures", (req: Request, res: Response) => {
 });
 
 router.get('/ip', (req: Request, res: Response) => {
-    const requesterIpv4Address = req.connection.remoteAddress.replace(/^.*:/, '');
-    aroundService.getLocationData(requesterIpv4Address).then(ipApiResponse => {res.json(ipApiResponse)});
+    const ip = readRequestIpFromEitherHeadersOrconnection(req);
+    aroundService.getLocationData(ip).then(ipApiResponse => {res.json(ipApiResponse)});
 });
 
 const initializeFixtures = (): void => {
@@ -57,6 +57,16 @@ const generateThread = (): AroundThread => {
         aroundMessages: messages,
         date: new Date()
     };
+}
+
+function readRequestIpFromEitherHeadersOrconnection(req: Request) {
+    let maybeIp = req.get('X-Forwarded-For');
+    if(!maybeIp) {
+        maybeIp = req.connection.remoteAddress;
+    }
+    const requesterIpv4Address = maybeIp.replace(/^.*:/, '');
+    console.log('Request from: ' + requesterIpv4Address);
+    return requesterIpv4Address;
 }
 
 export default router;
